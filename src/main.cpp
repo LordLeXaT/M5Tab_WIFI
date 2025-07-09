@@ -23,36 +23,16 @@ const char *password = "SuperWIFIPassword";
 #define SDIO2_RST GPIO_NUM_15
 
 WebServer server(80);
-
-void handleRoot()
-{
-  server.send(200, "text/plain", "You have done it");
-}
-
-void handleNotFound()
-{
-  String message = "File Not Found\n\n";
-  message += "URI: ";
-  message += server.uri();
-  message += "\nMethod: ";
-  message += (server.method() == HTTP_GET) ? "GET" : "POST";
-  message += "\nArguments: ";
-  message += server.args();
-  message += "\n";
-  for (uint8_t i = 0; i < server.args(); i++)
-  {
-    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
-  }
-  server.send(404, "text/plain", message);
-}
-
 M5GFX display;
-
 M5Canvas smain(&display);
 M5Canvas stouch(&display);
 
 int ttx = 0;
 int tty = 0;
+
+void handleRoot();
+void checkTouch();
+void handleNotFound();
 
 void setup()
 {
@@ -95,22 +75,6 @@ void setup()
   Serial.println("HTTP server started");
 }
 
-void checkTouch()
-{
-  lgfx::touch_point_t tp[1];
-  int nums = display.getTouchRaw(tp, 1);
-  if (nums)
-  {
-    ttx = int(tp->x);
-    tty = int(tp->y);
-    smain.setTextColor(RED);
-  }
-  else
-  {
-    smain.setTextColor(GREEN);
-  }
-}
-
 void loop()
 {
   server.handleClient();
@@ -127,4 +91,42 @@ void loop()
   smain.print(WiFi.localIP());
   smain.pushSprite(0, 0);
   vTaskDelay(1);
+}
+
+void checkTouch()
+{
+  lgfx::touch_point_t tp[1];
+  int nums = display.getTouchRaw(tp, 1);
+  if (nums)
+  {
+    ttx = int(tp->x);
+    tty = int(tp->y);
+    smain.setTextColor(RED);
+  }
+  else
+  {
+    smain.setTextColor(GREEN);
+  }
+}
+
+void handleRoot()
+{
+  server.send(200, "text/plain", "You have done it");
+}
+
+void handleNotFound()
+{
+  String message = "File Not Found\n\n";
+  message += "URI: ";
+  message += server.uri();
+  message += "\nMethod: ";
+  message += (server.method() == HTTP_GET) ? "GET" : "POST";
+  message += "\nArguments: ";
+  message += server.args();
+  message += "\n";
+  for (uint8_t i = 0; i < server.args(); i++)
+  {
+    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+  }
+  server.send(404, "text/plain", message);
 }
